@@ -1,0 +1,36 @@
+/* sidebar */
+
+/* Sidebar overlay (móvil) */
+@media (max-width: 767.98px) {
+  body.sidebar-open {
+    overflow: hidden;
+  }
+
+  #sidebarMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    transform: translateX(-260px);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1045; /* más alto que bootstrap modal */
+  }
+
+  body.sidebar-open #sidebarMenu {
+    transform: translateX(0);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Fondo semi-transparente para cuando sidebar está abierto */
+  #sidebarBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 1040;
+    display: none;
+  }
+  body.sidebar-open #sidebarBackdrop {
+    display: block;
+  }
+}
