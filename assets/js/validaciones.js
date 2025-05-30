@@ -2,15 +2,55 @@ import { guardarPedido } from './storage.js'; // Asegúrate que la ruta sea corr
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('formPedido');
-  const clienteInput = document.getElementById('cliente');
+  const clienteSelect = document.getElementById('cliente');  // Select cliente
   const tipoPrendaInput = document.getElementById('tipoPrenda');
   const cantidadInput = document.getElementById('cantidad');
   const fechaEntregaInput = document.getElementById('fechaEntrega');
 
+  function cargarClientes() {
+    // Cambié la clave para que coincida con storage.js
+    const clientesJson = localStorage.getItem('clientes_lavanderia');
+
+    // Limpiar select para cargar opciones nuevas
+    clienteSelect.innerHTML = '';
+
+    // Opción placeholder
+    const optionPlaceholder = document.createElement('option');
+    optionPlaceholder.value = '';
+    optionPlaceholder.textContent = 'Selecciona un cliente';
+    optionPlaceholder.disabled = true;
+    optionPlaceholder.selected = true;
+    clienteSelect.appendChild(optionPlaceholder);
+
+    if (clientesJson) {
+      try {
+        const clientes = JSON.parse(clientesJson);
+        clientes.forEach(cliente => {
+          const option = document.createElement('option');
+          option.value = cliente.nombre;  // Usas nombre como valor (ok)
+          option.textContent = cliente.nombre;
+          clienteSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error al parsear clientes desde localStorage:', error);
+      }
+    } else {
+      // Si no hay clientes, mostrar opción de aviso
+      const optionNone = document.createElement('option');
+      optionNone.value = '';
+      optionNone.textContent = 'No hay clientes disponibles';
+      optionNone.disabled = true;
+      clienteSelect.appendChild(optionNone);
+    }
+  }
+
+
+  // Cargar clientes al iniciar la página
+  cargarClientes();
+
   // Establecer fecha mínima (mañana) para el input de fecha
   const hoy = new Date();
   hoy.setDate(hoy.getDate() + 1); // Día siguiente
-
   const yyyy = hoy.getFullYear();
   const mm = String(hoy.getMonth() + 1).padStart(2, '0');
   const dd = String(hoy.getDate()).padStart(2, '0');
@@ -20,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const toastRegistroEl = document.getElementById('toastRegistro');
   const toastRegistro = new bootstrap.Toast(toastRegistroEl);
 
-  // Función para mostrar mensaje de error debajo del input
+  // Función para mostrar mensaje de error debajo del input/select
   function mostrarError(input, mensaje) {
     limpiarError(input);
     const error = document.createElement('div');
@@ -38,15 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Bloquear ingreso de números en inputs cliente y tipoPrenda
+  // Bloquear ingreso de números en input tipoPrenda (mantengo este evento)
   function bloquearNumeros(event) {
     const tecla = event.key;
     if (/\d/.test(tecla)) {
       event.preventDefault();
     }
   }
-
-  clienteInput.addEventListener('keypress', bloquearNumeros);
   tipoPrendaInput.addEventListener('keypress', bloquearNumeros);
 
   form.addEventListener('submit', (e) => {
@@ -55,11 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let valido = true;
 
     // Limpiar errores previos
-    [clienteInput, tipoPrendaInput, cantidadInput, fechaEntregaInput].forEach(limpiarError);
+    [clienteSelect, tipoPrendaInput, cantidadInput, fechaEntregaInput].forEach(limpiarError);
 
-    // Validar cliente (no vacío)
-    if (clienteInput.value.trim() === '') {
-      mostrarError(clienteInput, 'El nombre del cliente es obligatorio.');
+    // Validar cliente (select debe tener valor seleccionado)
+    if (!clienteSelect.value) {
+      mostrarError(clienteSelect, 'Por favor selecciona un cliente.');
       valido = false;
     }
 
@@ -88,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (valido) {
       // Crear y guardar el pedido
       const nuevoPedido = {
-        cliente: clienteInput.value.trim(),
+        cliente: clienteSelect.value,
         tipoPrenda: tipoPrendaInput.value.trim(),
         cantidad: cantidad,
         fechaEntrega: fechaEntregaInput.value,
@@ -99,6 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       toastRegistro.show();  // Mostrar confirmación
       form.reset();          // Limpiar formulario
+
+      // Para evitar que quede seleccionado el placeholder
+      clienteSelect.selectedIndex = 0;
     }
   });
 });
