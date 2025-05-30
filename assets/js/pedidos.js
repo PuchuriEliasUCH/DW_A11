@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tablaBody = document.querySelector('#tablaPedidos tbody');
   let pedidoIdEliminar = null;
 
-  // Referencias a inputs filtro (asegúrate de tenerlos en el HTML)
+  // LLAMAR A LOS COMPONENTES
   const filtroCliente = document.getElementById('filtroCliente');
   const filtroEstado = document.getElementById('filtroEstado');
   const filtroFecha = document.getElementById('filtroFecha');
@@ -65,12 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Eventos filtro - solo si existen los inputs (para evitar errores)
+  // BUSQUEDAS EN PEDIDOS
   if (filtroCliente) filtroCliente.addEventListener('input', mostrarPedidos);
   if (filtroEstado) filtroEstado.addEventListener('change', mostrarPedidos);
   if (filtroFecha) filtroFecha.addEventListener('change', mostrarPedidos);
 
-  // Cambiar estado del pedido
+  // CAMBIAR ESTADO
   tablaBody.addEventListener('change', e => {
     if (e.target.classList.contains('estado-select')) {
       const id = Number(e.target.dataset.id);
@@ -82,13 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
         pedido.estado = nuevoEstado;
         editarPedido(id, pedido);
       } else {
-        // Si está entregado, recarga la tabla para resetear el select deshabilitado
+        // Si está entregado, carga nuevamente la tabla de pedidos
         mostrarPedidos();
       }
     }
   });
 
-  // Guardar id para eliminar y abrir modal
+  // VENTANA DE ELIMINAR
   tablaBody.addEventListener('click', e => {
     if (e.target.classList.contains('eliminar-btn')) {
       const id = Number(e.target.dataset.id);
@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Confirmar eliminación desde el modal
   const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
   btnConfirmarEliminar.addEventListener('click', () => {
     if (pedidoIdEliminar !== null) {

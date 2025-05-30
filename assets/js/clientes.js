@@ -6,6 +6,7 @@ import {
 } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  // LLAMAMOS A LOS CAMPOS HTML
   const tablaBody = document.querySelector('#tablaClientes tbody');
   const filtroNombre = document.getElementById('filtroNombre');
   const formAgregarCliente = document.getElementById('formAgregarCliente');
@@ -93,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGuardar.textContent = 'Agregar';
   });
 
-  // Evento: Limpiar formulario
+  // BORRAR DATOS DEL FORMULARIO
   btnLimpiarFormulario?.addEventListener('click', () => {
     formAgregarCliente.reset();
     formAgregarCliente.classList.remove('was-validated');
@@ -102,10 +103,20 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGuardar.textContent = 'Agregar';
   });
 
-  // Evento: Filtro nombre
+  // AGREGAR CLIENTE
+  btnAbrirModalAgregarCliente?.addEventListener('click', () => {
+    clienteEnEdicion = null;
+    formAgregarCliente.reset();
+    formAgregarCliente.classList.remove('was-validated');
+    tituloModal.textContent = 'Agregar Cliente';
+    btnGuardar.textContent = 'Agregar';
+    modalAgregarCliente?.show();
+  });
+
+  // BUSQUEDA POR NOMBRE
   filtroNombre?.addEventListener('input', mostrarClientes);
 
-  // Evento: Mostrar confirmación para eliminar o abrir modal para editar
+  // EDITAR CLIENTE
   tablaBody.addEventListener('click', e => {
     const btnEliminar = e.target.closest('.eliminar-cliente-btn');
     if (btnEliminar) {
@@ -134,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Evento: Confirmar eliminación
+  // ELIMINAR CLIENTE
   btnConfirmarEliminarCliente?.addEventListener('click', () => {
     if (clienteIdEliminar !== null) {
       eliminarCliente(clienteIdEliminar);
@@ -142,16 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
       clienteIdEliminar = null;
       modalConfirmarEliminar?.hide();
     }
-  });
-
-  // Evento: Abrir modal para agregar cliente
-  btnAbrirModalAgregarCliente?.addEventListener('click', () => {
-    clienteEnEdicion = null;
-    formAgregarCliente.reset();
-    formAgregarCliente.classList.remove('was-validated');
-    tituloModal.textContent = 'Agregar Cliente';
-    btnGuardar.textContent = 'Agregar';
-    modalAgregarCliente?.show();
   });
 
   // Inicializar tabla al cargar página
