@@ -1,6 +1,7 @@
 import {
   obtenerClientes,
   guardarCliente,
+  editarCliente,
   eliminarCliente,
 } from './storage.js';
 
@@ -18,7 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalAgregarCliente = modalAgregarClienteEl ? new bootstrap.Modal(modalAgregarClienteEl) : null;
   const modalConfirmarEliminar = modalConfirmarEliminarEl ? new bootstrap.Modal(modalConfirmarEliminarEl) : null;
 
+  const tituloModal = document.querySelector('#modalAgregarClienteLabel');
+  const btnGuardar = formAgregarCliente ? formAgregarCliente.querySelector('button[type="submit"]') : null;
+
   let clienteIdEliminar = null;
+  let clienteEnEdicion = null;
 
   function mostrarClientes() {
     const clientes = obtenerClientes();
@@ -43,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${cliente.correo}</td>
         <td>${cliente.telefono || ''}</td>
         <td>
+          <button class="btn btn-primary btn-sm editar-cliente-btn me-1" data-id="${cliente.id}" title="Editar">
+            <i class="bi bi-pencil"></i> Editar
+          </button>
           <button class="btn btn-danger btn-sm eliminar-cliente-btn" data-id="${cliente.id}" title="Eliminar">
             <i class="bi bi-trash"></i> Eliminar
           </button>
@@ -52,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Evento: Agregar nuevo cliente
+  // Evento: Agregar nuevo cliente o editar existente
   formAgregarCliente?.addEventListener('submit', e => {
     e.preventDefault();
 
@@ -61,35 +69,68 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const nuevoCliente = {
+    const clienteData = {
       nombre: document.getElementById('nombreCliente').value.trim(),
       correo: document.getElementById('correoCliente').value.trim(),
       telefono: document.getElementById('telefonoCliente').value.trim(),
     };
 
-    guardarCliente(nuevoCliente);
-    mostrarClientes();
+    if (clienteEnEdicion !== null) {
+      // Editar cliente existente
+      editarCliente(clienteEnEdicion, clienteData);
+    } else {
+      // Guardar nuevo cliente
+      guardarCliente(clienteData);
+    }
 
+    mostrarClientes();
     modalAgregarCliente?.hide();
     formAgregarCliente.reset();
     formAgregarCliente.classList.remove('was-validated');
+
+    clienteEnEdicion = null;
+    tituloModal.textContent = 'Agregar Cliente';
+    btnGuardar.textContent = 'Agregar';
   });
 
   // Evento: Limpiar formulario
   btnLimpiarFormulario?.addEventListener('click', () => {
     formAgregarCliente.reset();
     formAgregarCliente.classList.remove('was-validated');
+    clienteEnEdicion = null;
+    tituloModal.textContent = 'Agregar Cliente';
+    btnGuardar.textContent = 'Agregar';
   });
 
   // Evento: Filtro nombre
   filtroNombre?.addEventListener('input', mostrarClientes);
 
-  // Evento: Mostrar confirmación para eliminar
+  // Evento: Mostrar confirmación para eliminar o abrir modal para editar
   tablaBody.addEventListener('click', e => {
-    const btn = e.target.closest('.eliminar-cliente-btn');
-    if (btn) {
-      clienteIdEliminar = Number(btn.dataset.id);
+    const btnEliminar = e.target.closest('.eliminar-cliente-btn');
+    if (btnEliminar) {
+      clienteIdEliminar = Number(btnEliminar.dataset.id);
       modalConfirmarEliminar?.show();
+      return;
+    }
+
+    const btnEditar = e.target.closest('.editar-cliente-btn');
+    if (btnEditar) {
+      const id = Number(btnEditar.dataset.id);
+      const clientes = obtenerClientes();
+      const cliente = clientes.find(c => c.id === id);
+      if (cliente) {
+        clienteEnEdicion = cliente.id;
+
+        document.getElementById('nombreCliente').value = cliente.nombre;
+        document.getElementById('correoCliente').value = cliente.correo;
+        document.getElementById('telefonoCliente').value = cliente.telefono || '';
+
+        tituloModal.textContent = 'Editar Cliente';
+        btnGuardar.textContent = 'Guardar Cambios';
+
+        modalAgregarCliente?.show();
+      }
     }
   });
 
@@ -105,9 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Evento: Abrir modal para agregar cliente
   btnAbrirModalAgregarCliente?.addEventListener('click', () => {
+    clienteEnEdicion = null;
+    formAgregarCliente.reset();
+    formAgregarCliente.classList.remove('was-validated');
+    tituloModal.textContent = 'Agregar Cliente';
+    btnGuardar.textContent = 'Agregar';
     modalAgregarCliente?.show();
   });
 
-  // Inicializar tabla
+  // Inicializar tabla al cargar página
   mostrarClientes();
 });
