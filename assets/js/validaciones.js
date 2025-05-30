@@ -1,25 +1,25 @@
-import { guardarPedido } from './storage.js'; // Asegúrate que la ruta sea correcta
+import { guardarPedido } from './storage.js'; 
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('formPedido');
-  const clienteSelect = document.getElementById('cliente');  // Select cliente
+  const clienteSelect = document.getElementById('cliente');  
   const tipoPrendaInput = document.getElementById('tipoPrenda');
   const cantidadInput = document.getElementById('cantidad');
   const fechaEntregaInput = document.getElementById('fechaEntrega');
 
-  // EVITAR FECHAS ANTERIORES
+  // FECHA MÍNIMA (mañana)
   const hoy = new Date();
-  hoy.setDate(hoy.getDate() + 1); // Día siguiente
+  hoy.setDate(hoy.getDate() + 1);
   const yyyy = hoy.getFullYear();
   const mm = String(hoy.getMonth() + 1).padStart(2, '0');
   const dd = String(hoy.getDate()).padStart(2, '0');
   fechaEntregaInput.min = `${yyyy}-${mm}-${dd}`;
 
-  // NOTIFICACION DE CONFIRMACION
+  // TOAST DE CONFIRMACIÓN
   const toastRegistroEl = document.getElementById('toastRegistro');
   const toastRegistro = new bootstrap.Toast(toastRegistroEl);
 
-  // VALIDACIONES
+  // MOSTRAR Y LIMPIAR ERRORES
   function mostrarError(input, mensaje) {
     limpiarError(input);
     const error = document.createElement('div');
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     error.textContent = mensaje;
     input.parentNode.appendChild(error);
   }
-  
+
   function limpiarError(input) {
     const parent = input.parentNode;
     const error = parent.querySelector('.text-danger');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Bloquear ingreso de números en input tipoPrenda (mantengo este evento)
+  // BLOQUEAR NÚMEROS EN TEXTO
   function bloquearNumeros(event) {
     const tecla = event.key;
     if (/\d/.test(tecla)) {
@@ -45,34 +45,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   tipoPrendaInput.addEventListener('keypress', bloquearNumeros);
 
+  // VALIDACIÓN DEL FORMULARIO
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
     let valido = true;
 
-    // Limpiar errores previos
     [clienteSelect, tipoPrendaInput, cantidadInput, fechaEntregaInput].forEach(limpiarError);
 
-    // Validar cliente (select debe tener valor seleccionado)
     if (!clienteSelect.value) {
       mostrarError(clienteSelect, 'Por favor selecciona un cliente.');
       valido = false;
     }
 
-    // Validar tipo prenda (no vacío)
     if (tipoPrendaInput.value.trim() === '') {
       mostrarError(tipoPrendaInput, 'El tipo de prenda es obligatorio.');
       valido = false;
     }
 
-    // Validar cantidad (número >= 1)
     const cantidad = parseInt(cantidadInput.value, 10);
     if (isNaN(cantidad) || cantidad < 1) {
       mostrarError(cantidadInput, 'La cantidad debe ser un número mayor o igual a 1.');
       valido = false;
     }
 
-    // Validar fecha entrega (fecha futura, no hoy ni antes)
     const fechaEntrega = new Date(fechaEntregaInput.value);
     const fechaMinima = new Date(fechaEntregaInput.min);
 
@@ -82,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (valido) {
-      // Crear y guardar el pedido
       const nuevoPedido = {
         cliente: clienteSelect.value,
         tipoPrenda: tipoPrendaInput.value.trim(),
@@ -93,22 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       guardarPedido(nuevoPedido);
 
-      toastRegistro.show();  // Mostrar confirmación
-      form.reset();          // Limpiar formulario
-
-      // Para evitar que quede seleccionado el placeholder
+      toastRegistro.show();
+      form.reset();
       clienteSelect.selectedIndex = 0;
     }
   });
 
+  // CARGAR CLIENTES EN EL SELECT
   function cargarClientes() {
-    // Cambié la clave para que coincida con storage.js
     const clientesJson = localStorage.getItem('clientes_lavanderia');
 
-    // Limpiar select para cargar opciones nuevas
     clienteSelect.innerHTML = '';
 
-    // Opción placeholder
     const optionPlaceholder = document.createElement('option');
     optionPlaceholder.value = '';
     optionPlaceholder.textContent = 'Selecciona un cliente';
@@ -121,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const clientes = JSON.parse(clientesJson);
         clientes.forEach(cliente => {
           const option = document.createElement('option');
-          option.value = cliente.nombre;  // Usas nombre como valor (ok)
+          option.value = cliente.nombre;
           option.textContent = cliente.nombre;
           clienteSelect.appendChild(option);
         });
@@ -129,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error al parsear clientes desde localStorage:', error);
       }
     } else {
-      // Si no hay clientes, mostrar opción de aviso
       const optionNone = document.createElement('option');
       optionNone.value = '';
       optionNone.textContent = 'No hay clientes disponibles';
@@ -138,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-
-  // Cargar clientes al iniciar la página
+  // EJECUTAR AL CARGAR
   cargarClientes();
 });

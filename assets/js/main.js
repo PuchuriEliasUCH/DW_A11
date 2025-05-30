@@ -1,4 +1,3 @@
-// Ruta: assets/js/main.js
 import { obtenerPedidos, obtenerClientes } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {

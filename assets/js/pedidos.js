@@ -2,19 +2,24 @@ import { obtenerPedidos, editarPedido, eliminarPedido } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const tablaBody = document.querySelector('#tablaPedidos tbody');
-  let pedidoIdEliminar = null;
-
-  // LLAMAR A LOS COMPONENTES
   const filtroCliente = document.getElementById('filtroCliente');
   const filtroEstado = document.getElementById('filtroEstado');
   const filtroFecha = document.getElementById('filtroFecha');
+  const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
+  let pedidoIdEliminar = null;
 
+  function puedeModificar(pedido) {
+    return pedido && pedido.estado !== 'Entregado';
+  }
+
+
+  // LISTAR PEDIDOS
   function mostrarPedidos() {
     let pedidos = obtenerPedidos();
 
-    const clienteFiltro = filtroCliente ? filtroCliente.value.trim().toLowerCase() : '';
-    const estadoFiltro = filtroEstado ? filtroEstado.value : '';
-    const fechaFiltro = filtroFecha ? filtroFecha.value : '';
+    const clienteFiltro = filtroCliente.value.trim().toLowerCase();
+    const estadoFiltro = filtroEstado.value;
+    const fechaFiltro = filtroFecha.value;
 
     pedidos = pedidos.filter(pedido => {
       const coincideCliente = pedido.cliente.toLowerCase().includes(clienteFiltro);
@@ -23,17 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return coincideCliente && coincideEstado && coincideFecha;
     });
 
+    tablaBody.innerHTML = '';
+
     if (pedidos.length === 0) {
       tablaBody.innerHTML = '<tr><td colspan="7" class="text-muted">No hay pedidos registrados.</td></tr>';
       return;
     }
 
-    tablaBody.innerHTML = '';
-
     pedidos.forEach((pedido, index) => {
-      if (!pedido.estado) pedido.estado = 'Pendiente';
-
-      // Si está entregado, deshabilitar select y botón eliminar
       const estaEntregado = pedido.estado === 'Entregado';
 
       const fila = document.createElement('tr');
@@ -65,12 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // BUSQUEDAS EN PEDIDOS
-  if (filtroCliente) filtroCliente.addEventListener('input', mostrarPedidos);
-  if (filtroEstado) filtroEstado.addEventListener('change', mostrarPedidos);
-  if (filtroFecha) filtroFecha.addEventListener('change', mostrarPedidos);
+  filtroCliente.addEventListener('input', mostrarPedidos);
+  filtroEstado.addEventListener('change', mostrarPedidos);
+  filtroFecha.addEventListener('change', mostrarPedidos);
 
-  // CAMBIAR ESTADO
   tablaBody.addEventListener('change', e => {
     if (e.target.classList.contains('estado-select')) {
       const id = Number(e.target.dataset.id);
@@ -78,39 +78,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const pedidos = obtenerPedidos();
       const pedido = pedidos.find(p => p.id === id);
-      if (pedido && pedido.estado !== 'Entregado') {  // solo editar si NO está entregado
+
+      if (puedeModificar(pedido)) {
         pedido.estado = nuevoEstado;
         editarPedido(id, pedido);
       } else {
-        // Si está entregado, carga nuevamente la tabla de pedidos
         mostrarPedidos();
       }
     }
   });
 
-  // VENTANA DE ELIMINAR
   tablaBody.addEventListener('click', e => {
     if (e.target.classList.contains('eliminar-btn')) {
       const id = Number(e.target.dataset.id);
-      const pedidos = obtenerPedidos();
-      const pedido = pedidos.find(p => p.id === id);
-
-      if (pedido && pedido.estado !== 'Entregado') {  // solo si NO está entregado
-        pedidoIdEliminar = id;
-      } else {
-        // No permitir eliminar ni abrir modal
-        pedidoIdEliminar = null;
-      }
+      const pedido = obtenerPedidos().find(p => p.id === id);
+      pedidoIdEliminar = puedeModificar(pedido) ? id : null;
     }
   });
 
-  const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
   btnConfirmarEliminar.addEventListener('click', () => {
     if (pedidoIdEliminar !== null) {
       eliminarPedido(pedidoIdEliminar);
       mostrarPedidos();
 
-      // Cerrar modal manualmente
       const modalEl = document.getElementById('confirmarEliminarModal');
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal.hide();

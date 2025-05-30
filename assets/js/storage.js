@@ -1,5 +1,3 @@
-// assets/js/storage.js
-
 const STORAGE_KEYS = {
   pedidos: 'pedidos_lavanderia',
   clientes: 'clientes_lavanderia',
